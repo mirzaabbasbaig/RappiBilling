@@ -1,0 +1,17 @@
+
+// ENGLISH TRANSLATION ///
+
+{
+  "welcome": "Welcome to our website",
+  "description": "This is a simple example of i18n.",
+  
+}
+
+// Spanish TRANSLATION ///
+
+
+{
+  "welcome": "Bienvenido a nuestro sitio web",
+  "description": "Este es un ejemplo simple de i18n.",
+  
+}

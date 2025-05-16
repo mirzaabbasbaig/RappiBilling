@@ -1,0 +1,9 @@
+.splach-Bg-image{
+    background-image: url('../../assets/images/slides 2.0.svg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top;
+    min-height: 100vh;
+    width: 100%;
+   
+}

@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@font-face {
+    font-family: 'PPObjectSans';
+    src: url('./assets/fonts/PPObjectSans-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'PPObjectSans';
+    src: url('./assets/fonts/PPObjectSans-Slanted.otf') format('opentype');
+    font-weight: 400;
+    font-style: oblique;
+}
+
+@font-face {
+    font-family: 'PPObjectSans';
+    src: url('./assets/fonts/PPObjectSans-Heavy.otf') format('opentype');
+    font-weight: 800;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'PPObjectSans';
+    src: url('./assets/fonts/PPObjectSans-HeavySlanted.otf') format('opentype');
+    font-weight: 800;
+    font-style: oblique;
+}
+
+
+#root {
+  min-width: 360px;
+  margin: 0 auto;
+  width: 100%;
+  
+  font-family: 'PPObjectSans', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  
+}
+

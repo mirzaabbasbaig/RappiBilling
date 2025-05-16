@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+    }
+    .navbar {
+      display: flex;
+      background-color: #FFFFFF;
+      position: relative;
+      padding: 0 40px;
+      height: 70px;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      z-index: 100;
+    }
+    .menu-item {
+      position: relative;
+      margin: 0 20px;
+    }
+    .menu-btn {
+      font-size: 15px;
+      color: #444;
+      padding: 8px 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    .menu-btn:hover {
+      color: #000;
+    }
+    .dropdown-container {
+      position: absolute;
+      top: 100%;
+      background-color: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      min-width: 220px;
+      border-radius: 10px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(0);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: none;
+      padding: 12px 0;
+    }
+    .navbar:hover .dropdown-container {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .dropdown-content {
+      display: none;
+      transition: opacity 0.3s ease;
+      padding: 4px 0;
+    }
+    .dropdown-content.active {
+      display: block;
+    }
+    .dropdown-content a {
+      display: block;
+      padding: 10px 20px;
+      color: #111;
+      text-decoration: none;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+    .dropdown-content a:hover {
+      background-color: #F4F4F4;
+      font-weight: 600;
+    }
+    /* Arrow on top */
+    .dropdown-container::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 10px solid white;
+    }
+  </style>
+</head>
+<body>
+<div class="navbar" id="navbar">
+  <div class="menu-item menu-home">
+    <button class="menu-btn">Overview</button>
+  </div>
+  <div class="menu-item menu-news">
+    <button class="menu-btn">Why Tedy?</button>
+  </div>
+  <div class="menu-item menu-1">
+    <button class="menu-btn">Resources</button>
+  </div>
+  <!-- <div class="menu-item menu-2">
+    <button class="menu-btn">Demo</button>
+  </div> -->
+  <!-- Shared Dropdown -->
+  <div class="dropdown-container" id="dropdownBox">
+    <div class="dropdown-content dropdown-home">
+      <a href="#">How does it work?</a>
+      <a href="#">Personalized benefits</a>
+      <a href="#">Employee recognition</a>
+      <a href="#">Insights</a>
+      <a href="#">Wallets & categories</a>
+    </div>
+    <div class="dropdown-content dropdown-news">
+      <a href="#">Why Tedy Intro</a>
+      <a href="#">For Teams</a>
+      <a href="#">HR Integration</a>
+    </div>
+    <div class="dropdown-content dropdown-1">
+      <a href="#">Case Studies</a>
+      <a href="#">Blog</a>
+      <a href="#">Ebooks</a>
+    </div>
+    <!-- <div class="dropdown-content dropdown-2">
+      <a href="#">Live Demo</a>
+      <a href="#">Interactive Tour</a>
+      <a href="#">Feature Showcase</a>
+    </div> -->
+  </div>
+</div>
+<script>
+  const dropdownBox = document.getElementById("dropdownBox");
+  const nav = document.getElementById("navbar");
+  const items = [
+    { class: "menu-home", dropdown: "dropdown-home" },
+    { class: "menu-news", dropdown: "dropdown-news" },
+    { class: "menu-1", dropdown: "dropdown-1" },
+    { class: "menu-2", dropdown: "dropdown-2" }
+  ];
+  items.forEach(item => {
+    const menu = document.querySelector(`.${item.class}`);
+    menu.addEventListener("mouseenter", () => {
+      const rect = menu.getBoundingClientRect();
+      const navRect = nav.getBoundingClientRect();
+      const leftOffset = rect.left - navRect.left + (rect.width / 2) - 110; // 110 = half dropdown width
+      dropdownBox.style.left = `${leftOffset}px`;
+      // Reset active classes
+      document.querySelectorAll(".dropdown-content").forEach(el => {
+        el.classList.remove("active");
+      });
+      // Activate the right dropdown content
+      document.querySelector(`.${item.dropdown}`).classList.add("active");
+    });
+  });
+  nav.addEventListener("mouseleave", () => {
+    dropdownBox.style.opacity = "0";
+    dropdownBox.style.visibility = "hidden";
+  });
+  nav.addEventListener("mouseenter", () => {
+    dropdownBox.style.opacity = "1";
+    dropdownBox.style.visibility = "visible";
+  });
+</script>
+</body>
+</html>
