@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const LoadingButton = ({ onClick, BtnText = "Submit", loadingText = "Processing...", disabled = false, isLoading }) => {
+const LoadingButton = ({ onClick, BtnTranslations = BtnTranslations, loadingText = "Processing...", disabled = false, isLoading }) => {
   const [internalLoading, setInternalLoading] = useState(false);
 
   const handleClick = async () => {
@@ -30,7 +30,8 @@ const LoadingButton = ({ onClick, BtnText = "Submit", loadingText = "Processing.
           <span>{loadingText}</span>
         </div>
       ) : (
-        BtnText
+        // BtnText
+         BtnTranslations
       )}
     </button>
   );

@@ -12,16 +12,17 @@ const DynamicBillingForm_1 = () => {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [language, setLanguage] = useState("en");
-  const [formDescription,setFormDescription] = useState('')
-  const [showAlert, setShowAlert] = useState({
-    show: false,
-    type: "",
-    message: "",
-    icon: null,
-  });
+  const [formDescription, setFormDescription] = useState("");
+  const [showAlert, setShowAlert] = useState({ show: false, type: "", message: "", icon: null });
 
-  // Translations for multilingual support
+  // Get query parameters from URL
+  const queryParams = new URLSearchParams(window.location.search);
+  const token = queryParams.get("userToken");
+  const lang = queryParams.get("lang")?.toLowerCase() || "es";
+
+  const [language, setLanguage] = useState(lang);
+  const [languageReady, setLanguageReady] = useState(false);
+
   const translations = {
     en: {
       required: (field) => `"${field}" is required`,
@@ -62,67 +63,75 @@ const DynamicBillingForm_1 = () => {
   };
 
   useEffect(() => {
-    const browserLang = (navigator.language || "en-US").split("-")[0];
-    if (["en", "es", "pt"].includes(browserLang)) {
-      setLanguage(browserLang);
-    } else {
-      setLanguage("en");
+    if (!["en", "es", "pt"].includes(language)) {
+      setLanguage("es");
     }
-  }, []); // run once on mount
-  
-// Initial: disable rendering until language is ready
-const [languageReady, setLanguageReady] = useState(false);
+    setLanguageReady(true);
+  }, [language]);
 
-useEffect(() => {
-  const browserLang = (navigator.language || "en-US").split("-")[0];
-  const selectedLang = ["en", "es", "pt"].includes(browserLang) ? browserLang : "en";
-  setLanguage(selectedLang);
-  setLanguageReady(true); // only after setting language
-}, []);
+  useEffect(() => {
+    if (!languageReady) return;
 
-useEffect(() => {
-  if (!languageReady || !language) return;
-
-  const fetchFields = async () => {
-    try {
-      const response = await axios.get(
-        "https://microservices.dev.rappi.com/api/consumer-bill/users/metadata",
-        {
-          headers: {
-            Authorization: `Bearer 132.gAAAAABoImq9m8kXOEsOd6Hpqq_9mIjoqXnQsIBSwfjDQkcAmdaYbPmgj9G0zf6Z9Z5fdNMukNjepFkZ8m_x97aHDPJewtk36AUfk8sld6Qf_O52Un3wIYf8aK_3XroJuWJbQXvnQf8IlATtufMRqDsk88WoArcrhvxLUmP0_KPQbapiYqYbfcolz6I7Hyg63JZN3pdH7xmIsnqOtLneIWZ0RoWngB562XDEsE-KGvkQXA1piIU4Q8b3Wa6iaJT5bsNQNfA-UHRWU4TJvwoVSCst06HqjUTjcggihU1jZ_d0vL-k--Oa9HrpGGVJGqurq-vFoPMh79S0KqFUZTL8i7_w7_6a7_tzJPA4rJ0sNpSRGUC11qeVebiwaY3eNoWnHsNwtWScKn3Vk11QUIlf7_UJuvrUmvC0jg==`,
-            "Content-Type": "application/json",
-            "Accept-Language": language,
-          },
-        }
-      );
-      const form_description_data = response.data.form_description
-
-      console.log(form_description_data);
-      setFormDescription(form_description_data)
-      const fieldsData = response.data.fields;
-      setFields(fieldsData);
-
-      const savedData = JSON.parse(localStorage.getItem("billingFormData")) || {};
-      const initialValues = {};
-
-      fieldsData.forEach((field) => {
-        initialValues[field.name] = savedData[field.name] ?? field.default_value ?? "";
-      });
-
-      setFormData(initialValues);
-    } catch (error) {
-      console.error("Error fetching metadata:", error);
+    if (!token) {
       setShowAlert({
         show: true,
         type: "error",
         message: translations[language]?.loadFail || "Failed to load form fields.",
         icon: <WarningIcon />,
       });
+      return;
     }
-  };
 
-  fetchFields();
-}, [languageReady, language]);
+   const fetchFields = async () => {
+  try {
+    const response = await axios.get(
+      "https://microservices.dev.rappi.com/api/consumer-bill/users/metadata",
+      {
+        headers: {
+          Authorization: decodeURIComponent(token),
+          "Content-Type": "application/json",
+          "Accept-Language": language,
+        },
+      }
+    );
+
+    setFormDescription(response.data.form_description || "");
+    const fieldsData = response.data.fields || [];
+
+    // 👇 Convert rule.values to options for SELECT fields
+    fieldsData.forEach((field) => {
+      if (field.type === "SELECT" && field.rule?.values?.length) {
+        field.options = field.rule.values.map((val) => ({
+          value: val.id,
+          label: val.description,
+        }));
+      }
+    });
+
+    setFields(fieldsData);
+
+    const savedData = JSON.parse(localStorage.getItem("billingFormData")) || {};
+    const initialValues = {};
+
+    fieldsData.forEach((field) => {
+      initialValues[field.name] = savedData[field.name] ?? field.default_value ?? "";
+    });
+
+    setFormData(initialValues);
+  } catch (error) {
+    console.error("❌ Error fetching metadata:", error);
+    setShowAlert({
+      show: true,
+      type: "error",
+      message: translations[language]?.loadFail || "Failed to load form fields.",
+      icon: <WarningIcon />,
+    });
+  }
+};
+
+
+    fetchFields();
+  }, [languageReady, language, token]);
 
   const handleInputChange = (name, value) => {
     const updatedForm = { ...formData, [name]: value };
@@ -137,7 +146,7 @@ useEffect(() => {
 
     let errorMsg = "";
 
-    if (field.required && value.trim() === "") {
+    if (value.trim() === "") {
       errorMsg = translations[language]?.required(field.description);
     }
 
@@ -198,14 +207,14 @@ useEffect(() => {
         payload,
         {
           headers: {
-            Authorization: `Bearer 132.gAAAAABoImq9m8kXOEsOd6Hpqq_9mIjoqXnQsIBSwfjDQkcAmdaYbPmgj9G0zf6Z9Z5fdNMukNjepFkZ8m_x97aHDPJewtk36AUfk8sld6Qf_O52Un3wIYf8aK_3XroJuWJbQXvnQf8IlATtufMRqDsk88WoArcrhvxLUmP0_KPQbapiYqYbfcolz6I7Hyg63JZN3pdH7xmIsnqOtLneIWZ0RoWngB562XDEsE-KGvkQXA1piIU4Q8b3Wa6iaJT5bsNQNfA-UHRWU4TJvwoVSCst06HqjUTjcggihU1jZ_d0vL-k--Oa9HrpGGVJGqurq-vFoPMh79S0KqFUZTL8i7_w7_6a7_tzJPA4rJ0sNpSRGUC11qeVebiwaY3eNoWnHsNwtWScKn3Vk11QUIlf7_UJuvrUmvC0jg==`,
+            Authorization: decodeURIComponent(token),
             "Content-Type": "application/json",
             "Accept-Language": language,
           },
         }
       );
 
-      console.log("✅ Success:", res.data);
+      console.log("✅ Submit Success:", res.data);
       setShowAlert({
         show: true,
         type: "success",
@@ -213,8 +222,6 @@ useEffect(() => {
         icon: <GreenCheck />,
       });
 
-      // setFormData({});
-      // localStorage.removeItem("billingFormData");
       setErrors({});
     } catch (err) {
       console.error("❌ Submit Error:", err);
@@ -233,11 +240,9 @@ useEffect(() => {
     <div className="px-4 pt-7 pb-20">
       <h3 className="text-lg font-medium text-black">
         {translations[language]?.billingData}
- 
       </h3>
       <p className="text-sm py-4 text-[#919AAA] leading-5">
-        {/* {translations[language]?.billingInfoNote} */}
-               {formDescription} 
+        {formDescription}
       </p>
 
       <form>
@@ -261,40 +266,33 @@ useEffect(() => {
               <div key={field.name} className="mb-5">
                 <SelectField
                   label={field.description}
+                  options={field.options || []}
                   value={formData[field.name] || ""}
                   onChange={(value) => handleInputChange(field.name, value)}
-                  options={field.rule.values.map((opt) => ({
-                    value: opt.id,
-                    label: opt.description,
-                  }))}
                 />
                 {errors[field.name] && (
                   <p className="text-xs text-red-500">{errors[field.name]}</p>
                 )}
               </div>
             );
-          } else {
-            return null;
           }
+          return null;
         })}
 
+        {showAlert.show && (
+          <AlertComponent
+            type={showAlert.type}
+            message={showAlert.message}
+            icon={showAlert.icon}
+          />
+        )}
+
         <LoadingButton
-          BtnText={translations[language]?.saveChanges}
-          onClick={handleSubmit}
+          text={translations[language]?.saveChanges}
           isLoading={isLoading}
-          disabled={isLoading}
+          onClick={handleSubmit}
         />
       </form>
-
-      <AlertComponent
-        show={showAlert.show}
-        message={showAlert.message}
-        type={showAlert.type}
-        icon={showAlert.icon}
-        onClose={() =>
-          setShowAlert({ show: false, type: "", message: "", icon: null })
-        }
-      />
     </div>
   );
 };
